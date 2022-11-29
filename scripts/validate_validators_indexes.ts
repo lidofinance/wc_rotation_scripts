@@ -1,9 +1,7 @@
 import { Argument, Command, Option } from 'commander';
-import { Contract, providers, utils } from 'ethers';
 import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
-import ProgressBar from 'progress';
-import { appendFileSync, readFile, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
 
 dotenv.config();
 
@@ -53,7 +51,7 @@ const getFinalizedSlotInfo = async (consensusLayerURL: string) => {
 };
 
 const readValidatorsIndexesFile = (filePath: string) => {
-  const fileContent = readFileSync(filePath).toString().trimEnd();
+  const fileContent = readFileSync(filePath, 'utf8').toString().trimEnd();
 
   const validatorIndexes = fileContent.split('\n').map((line, lineIndex) => {
     const data = line.split(',');

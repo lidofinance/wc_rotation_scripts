@@ -1,6 +1,7 @@
-import { Command, Option } from 'commander';
+import { Command, Argument, Option } from 'commander';
 import { readFileSync } from 'fs';
 import { Contract, Wallet, providers, BigNumber } from 'ethers';
+import prompts from 'prompts';
 import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
 import ProgressBar from 'progress';
@@ -49,7 +50,7 @@ const getDepositContract = async (address: string, wallet: Wallet) => {
 const program = new Command();
 
 program
-  .addOption(new Option('-d, --deposit-data-path <path>', 'Path to deposit data file').makeOptionMandatory())
+  .addArgument(new Argument('<file-path>', 'Path to deposit data file'))
   .addOption(
     new Option('-e, --execution-layer <string>', 'Execution layer node URL')
       .env('EXECUTION_LAYER')
@@ -65,7 +66,7 @@ program
       .env('PRIVATE_KEY')
       .makeOptionMandatory(),
   )
-  .action(async ({ depositDataPath, consensusLayer, executionLayer, privateKey }) => {
+  .action(async (depositDataPath, { consensusLayer, executionLayer, privateKey }) => {
     const provider = getProvider(executionLayer);
     const wallet = getWallet(privateKey, provider);
 
@@ -74,9 +75,18 @@ program
     const depositContract = await getDepositContract(depositContractAddress, wallet);
 
     console.table({
-      'Sender address:': wallet.address,
-      'Deposit contract address:': depositContract.address,
+      'Sender address': wallet.address,
+      'Deposit contract address': depositContract.address,
     });
+
+    const { confirm } = await prompts({
+      type: 'confirm',
+      name: 'confirm',
+      message: 'Continue?',
+      initial: true,
+    });
+
+    if (!confirm) return;
 
     const total = depositData.length;
     const sendBar = new ProgressBar('Send transactions [:bar] :current/:total', { total });
