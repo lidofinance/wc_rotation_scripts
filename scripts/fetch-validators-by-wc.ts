@@ -1,19 +1,20 @@
 import { Argument, Command, Option } from 'commander';
 import { Contract, providers, utils } from 'ethers';
-import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
 import ProgressBar from 'progress';
 import { appendFileSync } from 'fs';
+import {
+  fetchDepositContract,
+  fetchSlotData,
+  fetchValidators,
+  filterValidators,
+  getDepositContract,
+  getProvider,
+  Validator,
+} from './shared';
 
 dotenv.config();
-
-interface Validator {
-  index: string;
-  validator: {
-    pubkey: string;
-    withdrawal_credentials: string;
-  };
-}
+const program = new Command();
 
 const fetchFilteredPubkeysFromDepositContract = async (
   depositContract: Contract,
@@ -59,64 +60,6 @@ const fetchFilteredPubkeysFromDepositContract = async (
   return filteredPubkeys;
 };
 
-const fetchFilteredValidatorsFromConsensusLayer = async (
-  consensusLayerURL: string,
-  stateId: string | number,
-  withdrawalCredentials: string,
-) => {
-  const validators = await fetchValidators(consensusLayerURL, stateId);
-  const filteredValidators = validators.filter((data: any) => {
-    return data.validator.withdrawal_credentials === withdrawalCredentials;
-  });
-
-  return filteredValidators;
-};
-
-const fetchValidators = async (consensusLayerURL: string, stateId: string | number) => {
-  const url = new URL(`/eth/v1/beacon/states/${stateId}/validators`, consensusLayerURL);
-
-  const response = await fetch(url.toString());
-  const { data } = await response.json();
-
-  return data as Validator[];
-};
-
-const getDepositContractAddress = async (consensusLayerURL: string) => {
-  const url = new URL('/eth/v1/config/deposit_contract', consensusLayerURL);
-
-  const response = await fetch(url.toString());
-  const { data } = await response.json();
-
-  return data.address as string;
-};
-
-const getProvider = (executionLayerURL: string) => {
-  return new providers.JsonRpcProvider(executionLayerURL);
-};
-
-const getDepositContract = async (address: string, provider: providers.Provider) => {
-  const abi = [
-    'event DepositEvent(bytes pubkey, bytes withdrawal_credentials, bytes amount, bytes signature, bytes index)',
-  ];
-
-  return new Contract(address, abi, provider);
-};
-
-const getFinalizedSlotInfo = async (consensusLayerURL: string) => {
-  const url = new URL('/eth/v2/beacon/blocks/finalized', consensusLayerURL);
-
-  const response = await fetch(url.toString());
-  const { data } = await response.json();
-
-  const slotNumber = Number(data.message.slot);
-  const blockNumber = Number(data.message.body.execution_payload.block_number);
-
-  return {
-    slotNumber,
-    blockNumber,
-  };
-};
-
 const validateValidatorsData = (filteredValidatorsFromCL: Validator[], filteredPubkeysFromEL: Set<string>) => {
   if (filteredValidatorsFromCL.length === 0) {
     throw new Error('No validators found on Consensus Layer');
@@ -139,12 +82,10 @@ const validateValidatorsData = (filteredValidatorsFromCL: Validator[], filteredP
 
 const saveValidatorsIndexesToFile = (filePath: string, filteredValidatorsFromCL: Validator[]) => {
   const validatorIndexes = filteredValidatorsFromCL.map((data) => Number(data.index)).sort((a, b) => a - b);
-  validatorIndexes.forEach((validatorIndex, index) => {
-    appendFileSync(filePath, `${index},${validatorIndex}\n`);
+  validatorIndexes.forEach((validatorIndex) => {
+    appendFileSync(filePath, `${validatorIndex}\n`);
   });
 };
-
-const program = new Command();
 
 program
   .addOption(
@@ -172,10 +113,13 @@ program
   .action(async (filePath, { consensusLayer, executionLayer, withdrawalCredentials, fetchStep }) => {
     const provider = getProvider(executionLayer);
 
-    const depositContractAddress = await getDepositContractAddress(consensusLayer);
+    console.log('Fetching chain state...');
+    const { address: depositContractAddress } = await fetchDepositContract(consensusLayer, 'finalized');
     const depositContract = await getDepositContract(depositContractAddress, provider);
-
-    const { slotNumber, blockNumber } = await getFinalizedSlotInfo(consensusLayer);
+    const slotData = await fetchSlotData(consensusLayer, 'finalized');
+    const slotNumber = Number(slotData.message.slot);
+    const blockNumber = Number(slotData.message.body.execution_payload?.block_number);
+    console.log('Chain state fetched');
 
     console.table({
       'Finalized slot': slotNumber,
@@ -188,13 +132,8 @@ program
      * on the `slotNumber` state on Consensus Layer
      */
     console.log('Fetching validators from Consensus Layer...');
-
-    const filteredValidatorsFromCL = await fetchFilteredValidatorsFromConsensusLayer(
-      consensusLayer,
-      slotNumber,
-      withdrawalCredentials,
-    );
-
+    const validatorsFromCL = await fetchValidators(consensusLayer, slotNumber);
+    const filteredValidatorsFromCL = filterValidators(validatorsFromCL, withdrawalCredentials);
     console.log('Validators fetched. Validators with the withdrawal_credentials:', filteredValidatorsFromCL.length);
     console.log('-----');
 
@@ -203,14 +142,12 @@ program
      * from `DepositEvent` events on the deposit contract
      */
     console.log('Fetching deposits from Execution Layer...');
-
     const filteredPubkeysFromEL = await fetchFilteredPubkeysFromDepositContract(
       depositContract,
       withdrawalCredentials,
       blockNumber,
       fetchStep,
     );
-
     console.log('Deposit events fetched. Unique pubkeys with the withdrawal_credentials:', filteredPubkeysFromEL.size);
     console.log('-----');
 
@@ -218,9 +155,7 @@ program
      * Compare the data fetched from Consensus Layer and Execution Layer
      */
     console.log('Comparing data from Consensus Layer and Execution Layer...');
-
     validateValidatorsData(filteredValidatorsFromCL, filteredPubkeysFromEL);
-
     console.log('The data from Consensus Layer and Execution Layer are consistent');
     console.log('-----');
 
@@ -228,9 +163,7 @@ program
      * Save data to a file
      */
     console.log('Saving data to file...');
-
     saveValidatorsIndexesToFile(filePath, filteredValidatorsFromCL);
-
     console.log('The data is saved to:', filePath);
   })
   .parse(process.argv);

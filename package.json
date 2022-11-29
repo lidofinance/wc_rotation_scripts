@@ -4,11 +4,12 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "convert_pubkey_to_wc": "ts-node scripts/convert_pubkey_to_wc",
-    "send_deposit_txs": "ts-node scripts/send_deposit_txs",
-    "fetch_validators_by_wc": "ts-node scripts/fetch_validators_by_wc",
-    "validate_validators_indexes": "ts-node scripts/validate_validators_indexes",
-    "send_rotation_messages": "ts-node scripts/send_rotation_messages"
+    "convert-pubkey-to-wc": "ts-node scripts/convert-pubkey-to-wc",
+    "fetch-validators-by-wc": "ts-node scripts/fetch-validators-by-wc",
+    "get-validators-statistic": "ts-node scripts/get-validators-statistic",
+    "send-deposit-txs": "ts-node scripts/send-deposit-txs",
+    "send-rotation-messages": "ts-node scripts/send-rotation-messages",
+    "validate-validators-indexes": "ts-node scripts/validate-validators-indexes"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",

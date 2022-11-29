@@ -6,10 +6,10 @@ import * as dotenv from 'dotenv';
 import ProgressBar from 'progress';
 
 dotenv.config();
+const program = new Command();
 
 const readRotationMessagesFile = (filePath: string) => {
-  const parsed = JSON.parse(readFileSync(filePath, 'utf8'));
-  return parsed;
+  return JSON.parse(readFileSync(filePath, 'utf8'));
 };
 
 const validateIndexes = (fromIndex: number, toIndex: number, maxIndex: number) => {
@@ -57,8 +57,6 @@ const sendRotationMessages = async (messages: any[], consensusLayerURL: string, 
     messagesBar.tick(1);
   }
 };
-
-const program = new Command();
 
 program
   .addArgument(new Argument('<file-path>', 'Path to rotation messages file'))

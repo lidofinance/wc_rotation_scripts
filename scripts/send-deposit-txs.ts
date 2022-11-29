@@ -1,12 +1,13 @@
 import { Command, Argument, Option } from 'commander';
 import { readFileSync } from 'fs';
-import { Contract, Wallet, providers, BigNumber } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 import prompts from 'prompts';
-import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
 import ProgressBar from 'progress';
+import { fetchDepositContract, getDepositContract, getProvider, getWallet } from './shared';
 
 dotenv.config();
+const program = new Command();
 
 const getDepositData = (filePath: string) => {
   const parsed = JSON.parse(readFileSync(filePath, 'utf8')) as any[];
@@ -22,32 +23,30 @@ const getDepositData = (filePath: string) => {
   });
 };
 
-const getDepositContractAddress = async (consensusLayerURL: string) => {
-  const url = new URL('/eth/v1/config/deposit_contract', consensusLayerURL);
+const sendDepositData = async (depositData: any[], depositContract: Contract) => {
+  const total = depositData.length;
+  const sendBar = new ProgressBar('Send transactions [:bar] :current/:total', { total });
+  const confirmBar = new ProgressBar('Confirm transactions [:bar] :current/:total', { total });
+  const txList: any[] = [];
 
-  const response = await fetch(url.toString());
-  const { data } = await response.json();
+  for (const txData of depositData) {
+    const { pubkey, signature, withdrawal_credentials, deposit_data_root, value } = txData;
+    const tx = await depositContract.deposit(pubkey, withdrawal_credentials, signature, deposit_data_root, {
+      gasLimit: 100000,
+      value,
+    });
 
-  return data.address as string;
+    txList.push(tx);
+    sendBar.tick(1);
+  }
+
+  Promise.all(
+    txList.map(async (tx) => {
+      await tx.wait();
+      confirmBar.tick();
+    }),
+  );
 };
-
-const getWallet = (privateKey: string, provider: providers.Provider) => {
-  return new Wallet(privateKey, provider);
-};
-
-const getProvider = (executionLayerURL: string) => {
-  return new providers.JsonRpcProvider(executionLayerURL);
-};
-
-const getDepositContract = async (address: string, wallet: Wallet) => {
-  const abi = [
-    'function deposit(bytes calldata pubkey, bytes calldata withdrawal_credentials, bytes calldata signature, bytes32 deposit_data_root) external payable',
-  ];
-
-  return new Contract(address, abi, wallet);
-};
-
-const program = new Command();
 
 program
   .addArgument(new Argument('<file-path>', 'Path to deposit data file'))
@@ -71,7 +70,7 @@ program
     const wallet = getWallet(privateKey, provider);
 
     const depositData = getDepositData(depositDataPath);
-    const depositContractAddress = await getDepositContractAddress(consensusLayer);
+    const { address: depositContractAddress } = await fetchDepositContract(consensusLayer, 'finalized');
     const depositContract = await getDepositContract(depositContractAddress, wallet);
 
     console.table({
@@ -88,27 +87,6 @@ program
 
     if (!confirm) return;
 
-    const total = depositData.length;
-    const sendBar = new ProgressBar('Send transactions [:bar] :current/:total', { total });
-    const confirmBar = new ProgressBar('Confirm transactions [:bar] :current/:total', { total });
-    const txList: any[] = [];
-
-    for (const txData of depositData) {
-      const { pubkey, signature, withdrawal_credentials, deposit_data_root, value } = txData;
-      const tx = await depositContract.deposit(pubkey, withdrawal_credentials, signature, deposit_data_root, {
-        gasLimit: 100000,
-        value,
-      });
-
-      txList.push(tx);
-      sendBar.tick(1);
-    }
-
-    Promise.all(
-      txList.map(async (tx) => {
-        await tx.wait();
-        confirmBar.tick();
-      }),
-    );
+    await sendDepositData(depositData, depositContract);
   })
   .parse(process.argv);

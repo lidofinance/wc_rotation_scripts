@@ -1,9 +1,9 @@
 import { Command, Argument } from 'commander';
 import { utils } from 'ethers';
-
-const PUBKEY_LENGTH = 48;
+import { PUBKEY_LENGTH } from './shared';
 
 const { arrayify, hexlify, isHexString, sha256, base64 } = utils;
+const program = new Command();
 
 const pubkeyToBytes = (string: string): Uint8Array => {
   if (isHexString(string)) {
@@ -28,8 +28,6 @@ const hashToWithdrawalCredentials = (pubkeyHash: string): string => {
   bytes[0] = 0;
   return hexlify(bytes);
 };
-
-const program = new Command();
 
 program
   .addArgument(new Argument('<pubkey>', 'Public key in base64 or hex format to convert to withdrawal credentials'))
