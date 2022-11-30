@@ -23,6 +23,7 @@ Some scripts may require some of the following environment variables to be set:
 - `EXECUTION_LAYER` – RPC URL of execution layer client
 - `CONSENSUS_LAYER` – API URL of consensus layer client
 - `PRIVATE_KEY` – `0x` prefixed private key of account with some eth to send transactions
+- `BLS_SECRET_KEY` – `0x` prefixed BLS secret key to sign rotation messages
 
 ## Scripts
 
@@ -37,6 +38,22 @@ yarn convert-pubkey-to-wc tnrKcfBLZzA3tUAJt2Dxlh84NuVxQUHIkq/bdewINNzmeE2ccu2K19
 Arguments:
 
 - `public key`, required – public key in `base64` or `hex` format to convert to withdrawal credentials
+
+### Fetch rotation pool
+
+The scripts fetches BLS to execution changes pool of messages and print the statistic.
+
+```bash
+yarn fetch-rotation-pool data/validators.csv
+```
+
+Arguments:
+
+- `file path`, required – path to the output file
+
+The script requires env variables to be set:
+
+- `CONSENSUS_LAYER`
 
 ### Fetch validators indexes by withdrawal credentials
 
@@ -72,6 +89,14 @@ File format:
 4242
 ```
 
+### Generate BLS key
+
+The scripts generates BLS key for signing
+
+```bash
+yarn generate-bls-key
+```
+
 ### Get validators statistic
 
 The script collects validators statistic from Consensus Layer on a certain state id.
@@ -105,6 +130,10 @@ The script sends deposit transactions to the deposit contract from deposit data 
 ```bash
 yarn send-deposit-txs data/deposit_data.json
 ```
+
+Options:
+
+- `-d`, `--deposit-contract-address`, optional – the deposit contract address, if it's not specified the script will try to get it from Consensus Layer
 
 Arguments:
 
@@ -148,6 +177,28 @@ File format:
 ]
 ```
 
+### Sign rotation messages
+
+The script generates and sign messages to rotate withdrawal credentials. Once executed, it will generate a file that needs to be sent to the network.
+
+```bash
+yarn sign-rotation-messages -t 0x0000000000000000000000000000000000000000 data/validators.csv data/rotation_messages.json
+```
+
+Options:
+
+- `-t`, `--to-execution-address`, required – address on execution layer to which the rotation is performed
+
+Arguments:
+
+- `input file path`, required – path to the input csv file with validator indexes
+- `otput file path`, required – path to the output json file with signed messages
+
+The script requires env variables to be set:
+
+- `CONSENSUS_LAYER`
+- `BLS_SECRET_KEY`
+
 ### Validate validators indexes file
 
 The script validates data from the validator indexes file:
@@ -167,7 +218,7 @@ Options:
 
 Arguments:
 
-- `file path`, required – path to the input file
+- `file path`, required – path to the input csv file with validator indexes
 
 The script requires env variables to be set:
 

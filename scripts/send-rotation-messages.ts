@@ -31,7 +31,7 @@ const validateIndexes = (fromIndex: number, toIndex: number, maxIndex: number) =
 };
 
 const sendRotationMessages = async (messages: any[], consensusLayerURL: string, fromIndex: number, toIndex: number) => {
-  const url = new URL('/eth/v1/beacon/pool/bls_to_execution_changes', consensusLayerURL);
+  const url = new URL('eth/v1/beacon/pool/bls_to_execution_changes', consensusLayerURL);
   const messagesBar = new ProgressBar('Sending messages [:bar] :current/:total', { total: messages.length });
 
   for (let i = fromIndex; i <= toIndex; i++) {

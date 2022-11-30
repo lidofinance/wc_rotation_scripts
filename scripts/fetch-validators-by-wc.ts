@@ -1,5 +1,5 @@
 import { Argument, Command, Option } from 'commander';
-import { Contract, providers, utils } from 'ethers';
+import { Contract, utils } from 'ethers';
 import * as dotenv from 'dotenv';
 import ProgressBar from 'progress';
 import { appendFileSync } from 'fs';
@@ -10,7 +10,7 @@ import {
   filterValidators,
   getDepositContract,
   getProvider,
-  Validator,
+  ValidatorData,
 } from './shared';
 
 dotenv.config();
@@ -60,7 +60,7 @@ const fetchFilteredPubkeysFromDepositContract = async (
   return filteredPubkeys;
 };
 
-const validateValidatorsData = (filteredValidatorsFromCL: Validator[], filteredPubkeysFromEL: Set<string>) => {
+const validateValidatorsData = (filteredValidatorsFromCL: ValidatorData[], filteredPubkeysFromEL: Set<string>) => {
   if (filteredValidatorsFromCL.length === 0) {
     throw new Error('No validators found on Consensus Layer');
   }
@@ -80,7 +80,7 @@ const validateValidatorsData = (filteredValidatorsFromCL: Validator[], filteredP
   });
 };
 
-const saveValidatorsIndexesToFile = (filePath: string, filteredValidatorsFromCL: Validator[]) => {
+const saveValidatorsIndexesToFile = (filePath: string, filteredValidatorsFromCL: ValidatorData[]) => {
   const validatorIndexes = filteredValidatorsFromCL.map((data) => Number(data.index)).sort((a, b) => a - b);
   validatorIndexes.forEach((validatorIndex) => {
     appendFileSync(filePath, `${validatorIndex}\n`);

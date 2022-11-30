@@ -51,26 +51,26 @@ const sendDepositData = async (depositData: any[], depositContract: Contract) =>
 program
   .addArgument(new Argument('<file-path>', 'Path to deposit data file'))
   .addOption(
-    new Option('-e, --execution-layer <string>', 'Execution layer node URL')
-      .env('EXECUTION_LAYER')
-      .makeOptionMandatory(),
-  )
-  .addOption(
-    new Option('-c, --consensus-layer <string>', 'Consensus layer node URL')
-      .env('CONSENSUS_LAYER')
-      .makeOptionMandatory(),
-  )
-  .addOption(
     new Option('-p, --private-key <string>', 'Account PK to send transactions')
       .env('PRIVATE_KEY')
       .makeOptionMandatory(),
   )
-  .action(async (depositDataPath, { consensusLayer, executionLayer, privateKey }) => {
+  .addOption(
+    new Option('-e, --execution-layer <string>', 'Execution layer node URL')
+      .env('EXECUTION_LAYER')
+      .makeOptionMandatory(),
+  )
+  .addOption(new Option('-c, --consensus-layer <string>', 'Consensus layer node URL').env('CONSENSUS_LAYER'))
+  .addOption(new Option('-d, --deposit-contract-address <string>', 'Deposit contract address'))
+  .action(async (depositDataPath, { consensusLayer, executionLayer, privateKey, depositContractAddress }) => {
     const provider = getProvider(executionLayer);
     const wallet = getWallet(privateKey, provider);
 
+    if (!depositContractAddress) {
+      depositContractAddress = (await fetchDepositContract(consensusLayer, 'finalized')).address;
+    }
+
     const depositData = getDepositData(depositDataPath);
-    const { address: depositContractAddress } = await fetchDepositContract(consensusLayer, 'finalized');
     const depositContract = await getDepositContract(depositContractAddress, wallet);
 
     console.table({

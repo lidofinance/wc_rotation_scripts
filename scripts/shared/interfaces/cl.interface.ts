@@ -1,17 +1,19 @@
 export interface Validator {
+  pubkey: string;
+  withdrawal_credentials: string;
+  effective_balance: string;
+  slashed: boolean;
+  activation_eligibility_epoch: string;
+  activation_epoch: string;
+  exit_epoch: string;
+  withdrawable_epoch: string;
+}
+
+export interface ValidatorData {
   index: string;
   balance: string;
   status: string;
-  validator: {
-    pubkey: string;
-    withdrawal_credentials: string;
-    effective_balance: string;
-    slashed: boolean;
-    activation_eligibility_epoch: string;
-    activation_epoch: string;
-    exit_epoch: string;
-    withdrawable_epoch: string;
-  };
+  validator: Validator;
 }
 
 export interface Deposit {
@@ -99,4 +101,24 @@ export interface GetDepositContractResponse {
     chain_id: string;
     address: string;
   };
+}
+
+export interface GetGenesisResponse {
+  data: Genesis;
+}
+
+export interface Genesis {
+  genesis_time: string;
+  genesis_validators_root: string;
+  genesis_fork_version: string;
+}
+
+export interface GetPoolBLSToExecutionChangesResponse {
+  data: SignedBLSToExecutionChange[];
+}
+
+export interface GetStateValidatorsResponse {
+  execution_optimistic: boolean;
+  finalized: boolean;
+  data: ValidatorData[];
 }

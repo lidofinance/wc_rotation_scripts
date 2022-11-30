@@ -1,8 +1,6 @@
 import { Argument, Command, Option } from 'commander';
-import { Contract, providers, utils } from 'ethers';
-import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
-import { fetchSlotData, fetchValidators, filterValidators, readValidatorsIndexesFile, Validator } from './shared';
+import { fetchValidators, readValidatorsIndexesFile } from './shared';
 
 dotenv.config();
 const program = new Command();
@@ -35,7 +33,6 @@ program
     /**
      * Collect statistics by validators
      */
-
     const type0 = validatorsFromCL.filter(({ validator }) => validator.withdrawal_credentials.startsWith('0x00'));
     const type1 = validatorsFromCL.filter(({ validator }) => validator.withdrawal_credentials.startsWith('0x01'));
 

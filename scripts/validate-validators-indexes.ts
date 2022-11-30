@@ -1,11 +1,11 @@
 import { Argument, Command, Option } from 'commander';
 import * as dotenv from 'dotenv';
-import { fetchSlotData, fetchValidators, filterValidators, Validator, readValidatorsIndexesFile } from './shared';
+import { fetchValidators, filterValidators, ValidatorData, readValidatorsIndexesFile } from './shared';
 
 dotenv.config();
 const program = new Command();
 
-const validateValidatorIndexes = (validatorIndexes: number[], filteredValidatorsFromCL: Validator[]) => {
+const validateValidatorIndexes = (validatorIndexes: number[], filteredValidatorsFromCL: ValidatorData[]) => {
   const validatorIndexesSet = new Set(validatorIndexes);
 
   if (validatorIndexesSet.size !== validatorIndexes.length) {

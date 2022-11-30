@@ -1,11 +1,11 @@
-import { Validator } from './interfaces';
+import { GetStateValidatorsResponse } from './interfaces';
 import fetch from 'node-fetch';
 
 export const fetchValidators = async (consensusLayerURL: string, stateId: string | number) => {
-  const url = new URL(`/eth/v1/beacon/states/${stateId}/validators`, consensusLayerURL);
+  const url = new URL(`eth/v1/beacon/states/${stateId}/validators`, consensusLayerURL);
 
   const response = await fetch(url.toString());
-  const { data } = await response.json();
+  const { data } = (await response.json()) as GetStateValidatorsResponse;
 
-  return data as Validator[];
+  return data;
 };
