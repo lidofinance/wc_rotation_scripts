@@ -114,7 +114,7 @@ program
     const provider = getProvider(executionLayer);
 
     console.log('Fetching chain state...');
-    const { address: depositContractAddress } = await fetchDepositContract(consensusLayer, 'finalized');
+    const { address: depositContractAddress } = await fetchDepositContract(consensusLayer);
     const depositContract = await getDepositContract(depositContractAddress, provider);
     const slotData = await fetchSlotData(consensusLayer, 'finalized');
     const slotNumber = Number(slotData.message.slot);

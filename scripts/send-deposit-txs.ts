@@ -67,7 +67,7 @@ program
     const wallet = getWallet(privateKey, provider);
 
     if (!depositContractAddress) {
-      depositContractAddress = (await fetchDepositContract(consensusLayer, 'finalized')).address;
+      depositContractAddress = (await fetchDepositContract(consensusLayer)).address;
     }
 
     const depositData = getDepositData(depositDataPath);

@@ -12,6 +12,7 @@
     "send-deposit-txs": "ts-node scripts/send-deposit-txs",
     "send-rotation-messages": "ts-node scripts/send-rotation-messages",
     "sign-rotation-messages": "ts-node scripts/sign-rotation-messages",
+    "validate-rotation-messages": "ts-node scripts/validate-rotation-messages",
     "validate-validators-indexes": "ts-node scripts/validate-validators-indexes"
   },
   "devDependencies": {

@@ -12,20 +12,20 @@ import {
 } from './shared';
 import { writeFileSync } from 'fs';
 import { BLSToExecutionChange } from './ssz';
-import { hexlify } from 'ethers/lib/utils';
 
 dotenv.config();
 const program = new Command();
 
-const { arrayify } = utils;
+const { arrayify, hexlify } = utils;
 
 const signRotationMessages = (
   validatorIndexes: number[],
+  forkVersion: string,
   genesis: Genesis,
   blsSecretKey: SecretKey,
   toExecutionAddress: string,
 ) => {
-  const forkVersion = arrayify(genesis.genesis_fork_version);
+  const forkVersionBytes = arrayify(forkVersion);
   const genesisValidatorRoot = arrayify(genesis.genesis_validators_root);
   const blsPublicKey = hexlify(blsSecretKey.toPublicKey().toBytes());
 
@@ -37,7 +37,7 @@ const signRotationMessages = (
     };
 
     const sszObject = BLSToExecutionChange.fromJson(message);
-    const domain = computeDomain(DOMAIN_BLS_TO_EXECUTION_CHANGE, forkVersion, genesisValidatorRoot);
+    const domain = computeDomain(DOMAIN_BLS_TO_EXECUTION_CHANGE, forkVersionBytes, genesisValidatorRoot);
     const signingRoot = computeSigningRoot(BLSToExecutionChange, sszObject, domain);
     const signature = hexlify(blsSecretKey.sign(signingRoot).toBytes());
 
@@ -63,8 +63,9 @@ program
       .env('BLS_SECRET_KEY')
       .makeOptionMandatory(),
   )
+  .addOption(new Option('-f, --fork-version <string>', 'Capella fork version').makeOptionMandatory())
   .addOption(new Option('-t, --to-execution-address <string>', 'To Execution Layer address').makeOptionMandatory())
-  .action(async (inputFilePath, outputFilePath, { blsSecretKey, consensusLayer, toExecutionAddress }) => {
+  .action(async (inputFilePath, outputFilePath, { blsSecretKey, forkVersion, consensusLayer, toExecutionAddress }) => {
     const secretKey = SecretKey.fromBytes(arrayify(blsSecretKey));
 
     /**
@@ -81,7 +82,7 @@ program
      */
     console.log('Signing the rotation messages...');
     const genesis = await fetchGenesis(consensusLayer);
-    const signedMessages = signRotationMessages(validatorIndexes, genesis, secretKey, toExecutionAddress);
+    const signedMessages = signRotationMessages(validatorIndexes, forkVersion, genesis, secretKey, toExecutionAddress);
     saveSignedMessagesToFile(signedMessages, outputFilePath);
     console.log('Signing complete. The messages saved to:', outputFilePath);
   })

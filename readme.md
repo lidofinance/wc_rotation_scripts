@@ -182,22 +182,43 @@ File format:
 The script generates and sign messages to rotate withdrawal credentials. Once executed, it will generate a file that needs to be sent to the network.
 
 ```bash
-yarn sign-rotation-messages -t 0x0000000000000000000000000000000000000000 data/validators.csv data/rotation_messages.json
+yarn sign-rotation-messages -t 0x0000000000000000000000000000000000000000 -f 0x03000000 data/validators.csv data/rotation_messages.json
 ```
 
 Options:
 
 - `-t`, `--to-execution-address`, required – address on execution layer to which the rotation is performed
+- `-f`, `--fork-version`, required – fork version, to which the message signatures are valid. [`0x03000000` for Capella](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/fork.md#configuration)
 
 Arguments:
 
 - `input file path`, required – path to the input csv file with validator indexes
-- `otput file path`, required – path to the output json file with signed messages
+- `output file path`, required – path to the output json file with signed messages
 
 The script requires env variables to be set:
 
 - `CONSENSUS_LAYER`
 - `BLS_SECRET_KEY`
+
+### Validate rotation messages
+
+The script validates signature of message to rotate withdrawal credentials from `0x00` to `0x01` type.
+
+```bash
+yarn validate-rotation-messages -f 0x03000000 data/validators.json
+```
+
+Options:
+
+- `-f`, `--fork-version`, required – fork version, to which the message signatures are valid. [`0x03000000` for Capella](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/fork.md#configuration)
+
+Arguments:
+
+- `file path`, required – path to the input json file with signed messages
+
+The script requires env variables to be set:
+
+- `CONSENSUS_LAYER`
 
 ### Validate validators indexes file
 

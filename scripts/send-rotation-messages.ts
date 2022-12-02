@@ -1,16 +1,12 @@
 import { Command, Argument, Option } from 'commander';
-import { readFileSync } from 'fs';
 import prompts from 'prompts';
 import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
 import ProgressBar from 'progress';
+import { readRotationMessagesFile } from './shared';
 
 dotenv.config();
 const program = new Command();
-
-const readRotationMessagesFile = (filePath: string) => {
-  return JSON.parse(readFileSync(filePath, 'utf8'));
-};
 
 const validateIndexes = (fromIndex: number, toIndex: number, maxIndex: number) => {
   if (!Number.isFinite(fromIndex)) {
@@ -68,7 +64,14 @@ program
   .addOption(new Option('-f, --from-index <number>', 'From index of rotation messages to send').argParser(parseInt))
   .addOption(new Option('-t, --to-index <number>', 'To index of rotation messages to send').argParser(parseInt))
   .action(async (filePath, { consensusLayer, fromIndex, toIndex }) => {
+    /**
+     * Read rotation messages
+     */
+    console.log('Reading rotation messages file...');
     const messages = readRotationMessagesFile(filePath);
+    console.log('Messages are read:', messages.length);
+    console.log('-----');
+
     const maxIndex = messages.length - 1;
 
     if (fromIndex == null) fromIndex = 0;
