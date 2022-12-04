@@ -28,6 +28,59 @@ Some scripts may require some of the following environment variables to be set:
 
 - `EXECUTION_LAYER` – RPC URL of execution layer client
 - `CONSENSUS_LAYER` – API URL of consensus layer client
+- `KAFKA_CLIENT_ID` – A logical identifier of an application
+- `KAFKA_TOPIC` – Kafka topic
+- `KAFKA_USERNAME` – Kafka username
+- `KAFKA_PASSWORD` – Kafka password
+- `KAFKA_BROKER_ADDRESS` – Kafka broker address (`kafka1:9092`)
+
+### Expand signing roots
+
+The script is used to merge the validator indexes from the `.csv` file with the signatures obtained from kafka.
+
+```bash
+yarn expand-signing-roots data/validators.csv data/signatures data/output.json -f 0x03000000 -p 0xb67aca71f04b673037b54009b760f1961f3836e5714141c892afdb75ec0834dce6784d9c72ed8ad7db328cff8fe9f13e -t 0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f
+```
+
+Options:
+
+- `-p`, `--public-key`, required – public key of BSL withdrawal credentials
+- `-t`, `--to-execution-address`, required – address on execution layer to which the rotation is performed
+- `-f`, `--fork-version`, required – fork version, to which the message signatures are valid. [`0x03000000` for Capella](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/fork.md#configuration)
+
+Arguments:
+
+- `validators indexes path`, required – path to the input csv file with validator indexes
+- `signatures dir path`, required – path to the dir with reconstructed signature files
+- `output file path`, required – path to the output json file with rotation messages
+
+The script requires env variables to be set:
+
+- `CONSENSUS_LAYER`
+
+### Fetch kafka messages
+
+The script is used to get the reconstructed signature data from kafka and save them to files.
+
+```bash
+yarn fetch-kafka-messages -s 12.01.2022 data/signatures
+```
+
+Options:
+
+- `-s`, `--start-from`, optional – date in text format from which the messages will be read out
+
+Arguments:
+
+- `output dir path`, required – path to the output dir for reconstructed signatures
+
+The script requires env variables to be set:
+
+- `KAFKA_CLIENT_ID`
+- `KAFKA_TOPIC`
+- `KAFKA_USERNAME`
+- `KAFKA_PASSWORD`
+- `KAFKA_BROKER_ADDRESS`
 
 ### Fetch rotation pool
 
@@ -238,7 +291,7 @@ The script requires env variables to be set:
 The script generates and sign messages to rotate withdrawal credentials. Once executed, it will generate a file that needs to be sent to the network.
 
 ```bash
-yarn sign-rotation-messages -t 0x0000000000000000000000000000000000000000 -f 0x03000000 data/validators.csv data/rotation_messages.json
+yarn sign-rotation-messages -t 0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f -f 0x03000000 data/validators.csv data/rotation_messages.json
 ```
 
 Options:

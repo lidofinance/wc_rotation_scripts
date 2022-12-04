@@ -2,16 +2,8 @@ import { Command, Argument, Option } from 'commander';
 import * as dotenv from 'dotenv';
 import { SecretKey } from '@chainsafe/blst';
 import { utils } from 'ethers';
-import {
-  readValidatorsIndexesFile,
-  computeDomain,
-  fetchGenesis,
-  Genesis,
-  computeSigningRoot,
-  DOMAIN_BLS_TO_EXECUTION_CHANGE,
-} from './shared';
 import { writeFileSync } from 'fs';
-import { BLSToExecutionChange } from './ssz';
+import { readValidatorsIndexesFile, getMessagesToSign, fetchGenesis, Genesis } from './shared';
 
 dotenv.config();
 const program = new Command();
@@ -25,22 +17,11 @@ const signRotationMessages = (
   blsSecretKey: SecretKey,
   toExecutionAddress: string,
 ) => {
-  const forkVersionBytes = arrayify(forkVersion);
-  const genesisValidatorRoot = arrayify(genesis.genesis_validators_root);
-  const blsPublicKey = hexlify(blsSecretKey.toPublicKey().toBytes());
+  const publicKey = hexlify(blsSecretKey.toPublicKey().toBytes());
+  const messages = getMessagesToSign(validatorIndexes, publicKey, forkVersion, genesis, toExecutionAddress);
 
-  return validatorIndexes.map((validatorIndex) => {
-    const message = {
-      validator_index: validatorIndex,
-      from_bls_pubkey: blsPublicKey,
-      to_execution_address: toExecutionAddress,
-    };
-
-    const sszObject = BLSToExecutionChange.fromJson(message);
-    const domain = computeDomain(DOMAIN_BLS_TO_EXECUTION_CHANGE, forkVersionBytes, genesisValidatorRoot);
-    const signingRoot = computeSigningRoot(BLSToExecutionChange, sszObject, domain);
+  return messages.map(({ message, signingRoot }) => {
     const signature = hexlify(blsSecretKey.sign(signingRoot).toBytes());
-
     return { message, signature };
   });
 };

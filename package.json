@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "convert-pubkey-to-wc": "ts-node scripts/convert-pubkey-to-wc",
+    "expand-signing-roots": "ts-node scripts/expand-signing-roots",
     "fetch-kafka-messages": "ts-node scripts/fetch-kafka-messages",
     "fetch-rotation-pool": "ts-node scripts/fetch-rotation-pool",
     "fetch-validators-by-wc": "ts-node scripts/fetch-validators-by-wc",
