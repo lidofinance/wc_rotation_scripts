@@ -2,7 +2,7 @@ import { Argument, Command, Option } from 'commander';
 import { Contract, utils } from 'ethers';
 import * as dotenv from 'dotenv';
 import ProgressBar from 'progress';
-import { appendFileSync } from 'fs';
+import { appendFileSync, writeFileSync } from 'fs';
 import {
   fetchDepositContract,
   fetchSlotData,
@@ -81,6 +81,8 @@ const validateValidatorsData = (filteredValidatorsFromCL: ValidatorData[], filte
 };
 
 const saveValidatorsIndexesToFile = (filePath: string, filteredValidatorsFromCL: ValidatorData[]) => {
+  writeFileSync(filePath, '');
+
   const validatorIndexes = filteredValidatorsFromCL.map((data) => Number(data.index)).sort((a, b) => a - b);
   validatorIndexes.forEach((validatorIndex) => {
     appendFileSync(filePath, `${validatorIndex}\n`);

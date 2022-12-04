@@ -1,0 +1,9 @@
+[submodule "staking-deposit-cli"]
+	path = staking-deposit-cli
+	url = https://github.com/lidofinance/staking-deposit-cli
+[submodule "prysm"]
+	path = prysm
+	url = https://github.com/prysmaticlabs/prysm.git
+[submodule "go-ethereum"]
+	path = go-ethereum
+	url = https://github.com/lightclient/go-ethereum.git

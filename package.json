@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "convert-pubkey-to-wc": "ts-node scripts/convert-pubkey-to-wc",
+    "fetch-kafka-messages": "ts-node scripts/fetch-kafka-messages",
     "fetch-rotation-pool": "ts-node scripts/fetch-rotation-pool",
     "fetch-validators-by-wc": "ts-node scripts/fetch-validators-by-wc",
     "generate-bls-key": "ts-node scripts/generate-bls-key",
@@ -29,6 +30,7 @@
     "commander": "^9.4.1",
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
+    "kafkajs": "^2.2.3",
     "node-fetch": "^2.6.7",
     "progress": "^2.0.3",
     "prompts": "^2.4.2"

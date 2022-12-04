@@ -1,3 +1,5 @@
 /node_modules
 /data
+/nodes-data
 .env
+/config/generated-genesis.json*

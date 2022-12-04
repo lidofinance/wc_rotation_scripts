@@ -11,6 +11,7 @@ export * from './filter-validators';
 export * from './get-provider';
 export * from './get-deposit-contract';
 export * from './get-wallet';
+export * from './kafka';
 export * from './read-rotation-messages';
 export * from './read-validator-indexes';
 export * from './signing-root';
