@@ -7,6 +7,12 @@ set -e
 # Validate args
 #
 
+if [ "$1" = "" ]
+then
+	echo "Deposit data path is required"
+	exit 1
+fi
+
 DEPOSIT_DATA=$(readlink -f "$1")
 
 if [ ! -f "$DEPOSIT_DATA" ]; then
@@ -35,11 +41,8 @@ cd ../
 
 
 ##
-# Setup
+# Clean dirs
 #
-
-GENESIS=$(($(date +%s) + 60)) # 180s until genesis
-SHANGHAI=$(($GENESIS + 144))
 
 if [ -d "$DATA_DIR" ]
 then
@@ -50,14 +53,20 @@ mkdir $DATA_DIR
 mkdir $PRYSM_DATA_DIR
 mkdir $GETH_DATA_DIR
 
-cp $CONFIG_DIR/genesis.json $CONFIG_DIR/generated-genesis.json
-sed -i -e 's/XXX/'$SHANGHAI'/' $CONFIG_DIR/generated-genesis.json
-
 ##
 # Setup Prysm
 #
 
 cd $PRYSM_DIR
+
+bazel run //cmd/validator -- accounts import \
+  --keys-dir=$(dirname $DEPOSIT_DATA) \
+	--wallet-dir=$VALIDATOR_DATA_DIR/wallet \
+	--wallet-password-file=$CONFIG_DIR/wallet-password.txt \
+	--account-password-file=$CONFIG_DIR/keystore-password.txt
+
+GENESIS=$(($(date +%s) + 60)) # 180s until genesis
+
 bazel run //cmd/prysmctl -- testnet generate-genesis \
 	--num-validators=0 \
 	--deposit-json-file=$DEPOSIT_DATA \
@@ -65,17 +74,15 @@ bazel run //cmd/prysmctl -- testnet generate-genesis \
 	--chain-config-file=$CONFIG_DIR/config.yml \
 	--genesis-time=$GENESIS
 
-bazel run //cmd/validator -- accounts import \
-  --keys-dir=$(dirname $DEPOSIT_DATA) \
-	--wallet-dir=$VALIDATOR_DATA_DIR/wallet \
-	--wallet-password-file=$CONFIG_DIR/wallet-password.txt \
-	--account-password-file=$CONFIG_DIR/keystore-password.txt
 cd ../
-
 
 ##
 # Setup Geth
 #
+
+SHANGHAI=$(($GENESIS + 144))
+cp $CONFIG_DIR/genesis.json $CONFIG_DIR/generated-genesis.json
+sed -i -e 's/XXX/'$SHANGHAI'/' $CONFIG_DIR/generated-genesis.json
 
 cd $GETH_DIR
 ./build/bin/geth --datadir $GETH_DATA_DIR init $CONFIG_DIR/generated-genesis.json

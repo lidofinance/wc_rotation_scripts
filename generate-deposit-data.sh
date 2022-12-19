@@ -7,6 +7,8 @@ then
   echo "Withdrawal credentials is requred" && exit 1
 fi
 
+START_TIME=$SECONDS
+
 cd ./staking-deposit-cli
 
 DIR=../data
@@ -22,8 +24,11 @@ PASSWORD=$(<$CONFIG_DIR/keystore-password.txt)
   existing-mnemonic \
   --withdrawal_credentials=$1 \
   --chain=testnet20000089 \
-  --num_validators=32 \
+  --num_validators=5000 \
   --folder=$DIR \
   --keystore_password="$PASSWORD" \
   --validator_start_index=0 \
   --mnemonic="aban aban aban aban aban aban aban aban aban aban aban abou"
+
+ELAPSED=$(( SECONDS - START_TIME ))
+echo "$(($ELAPSED / 60)) minutes and $(($ELAPSED % 60)) seconds elapsed"

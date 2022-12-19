@@ -9,4 +9,5 @@ bazel run //cmd/validator -- \
 	--accept-terms-of-use \
 	--chain-config-file=$CONFIG_DIR/config.yml \
 	--config-file=$CONFIG_DIR/config.yml \
+	--grpc-max-msg-size=104857600 \
 	--wallet-password-file=$CONFIG_DIR/wallet-password.txt

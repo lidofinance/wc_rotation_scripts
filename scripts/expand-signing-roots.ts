@@ -7,13 +7,6 @@ import { readValidatorsIndexesFile, getMessagesToSign, fetchGenesis } from './sh
 dotenv.config();
 const program = new Command();
 
-const getMessageMap = (messages: { message: any; signingRoot: Uint8Array }[]) => {
-  return messages.reduce((acc, { message, signingRoot }) => {
-    acc[utils.hexlify(signingRoot)] = message;
-    return acc;
-  }, {} as any);
-};
-
 const saveMessagesToFile = (signedMessages: any, filePath: string) => {
   const fileContent = JSON.stringify(signedMessages);
   writeFileSync(filePath, fileContent);
@@ -21,11 +14,7 @@ const saveMessagesToFile = (signedMessages: any, filePath: string) => {
 
 const getMessageSignatures = (fileName: string) => {
   const sourceContent = readFileSync(fileName, 'utf8');
-  const parsed = JSON.parse(sourceContent) as any[];
-  const sorted = parsed.sort((a, b) => a.signingRoot.localeCompare(b.signingRoot));
-  const content = JSON.stringify(sorted);
-
-  return [sorted, content] as const;
+  return JSON.parse(sourceContent) as any[];
 };
 
 const readMessageSignatures = (dir: string) => {
@@ -35,26 +24,29 @@ const readMessageSignatures = (dir: string) => {
     throw new Error('No signature files are found');
   }
 
-  const [firstFile, ...rest] = files;
-  const [signatures, firstFileContent] = getMessageSignatures(`${dir}/${firstFile}`);
+  const signaturesMap = files.reduce((acc, fileName) => {
+    const signatures = getMessageSignatures(`${dir}/${fileName}`);
+    signatures.forEach(({ signingRoot, signature }) => {
+      if (acc[signingRoot] == null) {
+        acc[signingRoot] = signature;
+      }
 
-  const isAllFileTheSame = rest.every((fileName) => {
-    const [, content] = getMessageSignatures(`${dir}/${firstFile}`);
-    return firstFileContent === content;
-  });
+      if (acc[signingRoot] !== signature) {
+        throw new Error(`Reconstructed signatures are not the same for root: ${signingRoot}`);
+      }
+    });
 
-  if (!isAllFileTheSame) {
-    throw new Error('Reconstructed signatures are not the same');
-  }
+    return acc;
+  }, {} as any);
 
-  return signatures;
+  return signaturesMap;
 };
 
-const mergeMessagesWithSignatures = (messagesMap: any, signatures: any[]) => {
-  return signatures
-    .map(({ signingRoot, signature }) => {
-      const message = messagesMap[signingRoot];
-      if (!message) return undefined;
+const mergeMessagesWithSignatures = (messages: { message: any; signingRoot: Uint8Array }[], signaturesMap: any) => {
+  return messages
+    .map(({ message, signingRoot }) => {
+      const signature = signaturesMap[utils.hexlify(signingRoot)];
+      if (!signature) return undefined;
 
       return { message, signature };
     })
@@ -93,8 +85,9 @@ program
        * Read reconstructed signatures from dir
        */
       console.log('Reading signatures from dir...');
-      const signatures = readMessageSignatures(signaturesDir);
-      console.log('Signatures are read:', signatures.length);
+      const signaturesMap = readMessageSignatures(signaturesDir);
+      const reconstructedSignaturesLength = Object.keys(signaturesMap).length;
+      console.log('Signatures are read:', reconstructedSignaturesLength);
       console.log('-----');
 
       /**
@@ -103,10 +96,17 @@ program
       console.log('Merging messages with signing roots...');
       const genesis = await fetchGenesis(consensusLayer);
       const messages = getMessagesToSign(validatorIndexes, publicKey, forkVersion, genesis, toExecutionAddress);
-      const messagesMap = getMessageMap(messages);
-      const resultMessages = mergeMessagesWithSignatures(messagesMap, signatures);
+      const signedMessages = mergeMessagesWithSignatures(messages, signaturesMap);
+      const signedMessagesLength = signedMessages.length;
 
-      saveMessagesToFile(resultMessages, outputFilePath);
+      if (signedMessagesLength !== reconstructedSignaturesLength) {
+        console.warn('The number of signatures does not match the number of messages', {
+          signedMessagesLength,
+          reconstructedSignaturesLength,
+        });
+      }
+
+      saveMessagesToFile(signedMessages, outputFilePath);
       console.log('The messages saved to:', outputFilePath);
     },
   )

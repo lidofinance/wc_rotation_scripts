@@ -61,6 +61,25 @@ program
     const genesis = await fetchGenesis(consensusLayer);
     const result = verifyRotationMessages(messages, forkVersion, genesis);
 
-    console.table(result);
+    const validSignatures = result.filter(({ result }) => result === true);
+    const invalidSignatures = result.filter(({ result }) => result === false);
+    console.log('Validation done');
+
+    if (validSignatures.length) {
+      console.log('-----');
+      console.log('Valid signatures');
+      console.table(validSignatures);
+    }
+
+    if (invalidSignatures.length) {
+      console.log('-----');
+      console.log('Invalid signatures');
+      console.table(invalidSignatures);
+    }
+
+    console.table({
+      'Valid signatures': validSignatures.length,
+      'Invalid signatures': invalidSignatures.length,
+    });
   })
   .parse(process.argv);

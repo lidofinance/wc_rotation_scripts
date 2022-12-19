@@ -20,4 +20,5 @@ bazel run //cmd/beacon-chain -- \
 	--accept-terms-of-use \
 	--jwt-secret=$CONFIG_DIR/jwtsecret.txt \
 	--suggested-fee-recipient=$FEE_RECIPIENT \
+	--grpc-max-msg-size=104857600 \
 	--verbosity debug

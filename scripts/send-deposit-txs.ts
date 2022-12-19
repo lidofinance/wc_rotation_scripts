@@ -30,17 +30,23 @@ const sendDepositData = async (depositData: any[], depositContract: Contract) =>
   const txList: any[] = [];
 
   for (const txData of depositData) {
-    const { pubkey, signature, withdrawal_credentials, deposit_data_root, value } = txData;
-    const tx = await depositContract.deposit(pubkey, withdrawal_credentials, signature, deposit_data_root, {
-      gasLimit: 100000,
-      value,
-    });
+    try {
+      const { pubkey, signature, withdrawal_credentials, deposit_data_root, value } = txData;
 
-    txList.push(tx);
-    sendBar.tick(1);
+      const tx = await depositContract.deposit(pubkey, withdrawal_credentials, signature, deposit_data_root, {
+        gasLimit: 250000,
+        value,
+      });
+
+      txList.push(tx);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      sendBar.tick(1);
+    }
   }
 
-  Promise.all(
+  const result = await Promise.allSettled(
     txList.map(async (tx) => {
       await tx.wait();
       confirmBar.tick();
@@ -62,31 +68,39 @@ program
   )
   .addOption(new Option('-c, --consensus-layer <string>', 'Consensus layer node URL').env('CONSENSUS_LAYER'))
   .addOption(new Option('-d, --deposit-contract-address <string>', 'Deposit contract address'))
-  .action(async (depositDataPath, { consensusLayer, executionLayer, privateKey, depositContractAddress }) => {
-    const provider = getProvider(executionLayer);
-    const wallet = getWallet(privateKey, provider);
+  .addOption(new Option('-f, --from-index <number>', 'From index'))
+  .addOption(new Option('-t, --to-index <number>', 'To index'))
+  .action(
+    async (
+      depositDataPath,
+      { consensusLayer, executionLayer, privateKey, depositContractAddress, fromIndex, toIndex },
+    ) => {
+      const provider = getProvider(executionLayer);
+      const wallet = getWallet(privateKey, provider);
 
-    if (!depositContractAddress) {
-      depositContractAddress = (await fetchDepositContract(consensusLayer)).address;
-    }
+      if (!depositContractAddress) {
+        depositContractAddress = (await fetchDepositContract(consensusLayer)).address;
+      }
 
-    const depositData = getDepositData(depositDataPath);
-    const depositContract = await getDepositContract(depositContractAddress, wallet);
+      const depositData = getDepositData(depositDataPath);
+      const depositContract = await getDepositContract(depositContractAddress, wallet);
 
-    console.table({
-      'Sender address': wallet.address,
-      'Deposit contract address': depositContract.address,
-    });
+      console.table({
+        'Sender address': wallet.address,
+        'Deposit contract address': depositContract.address,
+      });
 
-    const { confirm } = await prompts({
-      type: 'confirm',
-      name: 'confirm',
-      message: 'Continue?',
-      initial: true,
-    });
+      const { confirm } = await prompts({
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Continue?',
+        initial: true,
+      });
 
-    if (!confirm) return;
+      if (!confirm) return;
 
-    await sendDepositData(depositData, depositContract);
-  })
+      const slicedData = depositData.slice(fromIndex ?? 0, toIndex ?? depositData.length);
+      await sendDepositData(slicedData, depositContract);
+    },
+  )
   .parse(process.argv);
