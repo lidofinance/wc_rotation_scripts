@@ -43,6 +43,10 @@ const readMessageSignatures = (dir: string) => {
 };
 
 const mergeMessagesWithSignatures = (messages: { message: any; signingRoot: Uint8Array }[], signaturesMap: any) => {
+  const isntNil = <T>(value: T): value is NonNullable<T> => {
+    return value != null;
+  };
+
   return messages
     .map(({ message, signingRoot }) => {
       const signature = signaturesMap[utils.hexlify(signingRoot)];
@@ -50,7 +54,8 @@ const mergeMessagesWithSignatures = (messages: { message: any; signingRoot: Uint
 
       return { message, signature };
     })
-    .filter((v) => v);
+    .filter(isntNil)
+    .sort((a, b) => a.message.validator_index - b.message.validator_index);
 };
 
 program
