@@ -108,7 +108,7 @@ program
   )
   .addOption(
     new Option('-s, --fetch-step <number>', 'Step of fetching events from the deposit contract')
-      .default(100_000)
+      .default(10_000)
       .argParser(parseInt),
   )
   .addArgument(new Argument('<file-path>', 'File to save result'))
