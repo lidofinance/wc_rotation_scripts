@@ -9,7 +9,6 @@ dotenv.config();
 const program = new Command();
 
 const { base64, hexlify, toUtf8String } = utils;
-const GROUP_ID = 'rotation-scripts';
 
 const writeMessageToFile = (data: any, fileName: string) => {
   const fileContent = JSON.stringify(data, null, 2);
@@ -37,15 +36,14 @@ const processEvent = (message: any, outputDir: string) => {
 
 program
   .addOption(new Option('-c, --client-id <string>', 'Kafka client id').env('KAFKA_CLIENT_ID').makeOptionMandatory())
+  .addOption(new Option('-g, --group-id <string>', 'Kafka group id').env('KAFKA_GROUP_ID').makeOptionMandatory())
   .addOption(new Option('-t, --topic <string>', 'Kafka topic').env('KAFKA_TOPIC').makeOptionMandatory())
   .addOption(new Option('-u, --username <string>', 'Kafka username').env('KAFKA_USERNAME').makeOptionMandatory())
   .addOption(new Option('-p, --password <string>', 'Kafka password').env('KAFKA_PASSWORD').makeOptionMandatory())
   .addOption(new Option('-b, --broker <string>', 'Kafka broker').env('KAFKA_BROKER_ADDRESS').makeOptionMandatory())
   .addOption(new Option('-s, --start-from <string>', 'Start date').default(0))
   .addArgument(new Argument('<output-dir>', 'Output dir for reconstructed signatures'))
-  .action(async (outputDir, { clientId, topic, username, password, broker, startFrom }) => {
-    const groupId = GROUP_ID;
-
+  .action(async (outputDir, { clientId, groupId, topic, username, password, broker, startFrom }) => {
     const kafka = new Kafka({
       clientId,
       brokers: [broker],
