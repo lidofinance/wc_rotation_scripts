@@ -93,9 +93,10 @@ program
         const string = message.value?.toString() ?? '';
         const parsed = JSON.parse(string);
 
+        const { offset } = message;
         const { event, sender } = parsed;
 
-        console.log('Event received', { event, sender });
+        console.log({ offset, event, sender });
         processEvent(parsed, outputDir);
       },
     });
