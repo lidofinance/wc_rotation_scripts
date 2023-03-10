@@ -101,7 +101,7 @@ yarn fetch-kafka-messages data/testnet-signatures --start-from 01.01.2023 00:00
 Step 12. Collect signatures and convert them to the required format
 
 ```bash
-yarn expand-signing-roots data/testnet-validators.csv data/signatures data/testnet-rotation-messages.json -p 0x8199b7a8c6998aafb30a955794f5d72a454ed1caf51bdbfc3065973153f64eeb64ff07a5b43cb9007cba3e3ec76ed756 -t 0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f
+yarn expand-signing-roots data/testnet-validators.csv data/testnet-signatures data/testnet-rotation-messages.json -p 0x8199b7a8c6998aafb30a955794f5d72a454ed1caf51bdbfc3065973153f64eeb64ff07a5b43cb9007cba3e3ec76ed756 -t 0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f
 ```
 
 Step 13. Validate rotation messages locally
