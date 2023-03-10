@@ -48,7 +48,7 @@ Step 4. Generate validator deposit data and remember the file name
 
 Get the file name:
 
-```
+```bash
 ls data/validator_keys/deposit_data*.json
 ```
 
@@ -66,21 +66,21 @@ Or use reinit if you already have imported validator keys:
 
 Step 6. Run nodes in separate terminals
 
-```
+```bash
 ./nodes-start-prysm.sh
 ```
 
-```
+```bash
 ./nodes-start-validators.sh
 ```
 
-```
+```bash
 ./nodes-start-geth.sh
 ```
 
 Step 7. Wait for bellatrix
 
-```
+```bash
 curl -s http://localhost:3500/eth/v2/beacon/blocks/head | jq '{version: .version, slot:.data.message.slot}'
 ```
 
@@ -90,7 +90,7 @@ Step 8. Send deposit transactions (they don't really count, but we need deposits
 yarn send-deposit-txs data/validator_keys/<FILE_NAME_FROM_PREVIOUS_STEP>
 ```
 
-Step 9. Wait while CL reaches deposits on EL and then fetch validators by withdrawal credentials from EL and CL nodes and fill a file with validator indexes to rotate
+Step 9. Wait for finality on CL and then fetch validators by withdrawal credentials from EL and CL nodes and fill a file with validator indexes to rotate
 
 ```bash
 yarn fetch-validators-by-wc -w 0x00e4ef670e3a6795beae66c301a04e914f096b2496026a9d96be723beafa2e1b data/testnet-validators.csv
@@ -98,30 +98,30 @@ yarn fetch-validators-by-wc -w 0x00e4ef670e3a6795beae66c301a04e914f096b2496026a9
 
 Step 10. Sign rotation messages
 
-```
+```bash
 yarn sign-rotation-messages -t 0xa5F1d7D49F581136Cf6e58B32cBE9a2039C48bA1 data/testnet-validators.csv data/testnet-rotation-messages.json
 ```
 
 Step 11. Validate rotation messages locally
 
-```
+```bash
 yarn validate-rotation-messages data/testnet-rotation-messages.json
 ```
 
 Step 12. Get validators statistic, make sure that all validators have 0x00 withdrawal credentials type
 
-```
+```bash
 yarn get-validators-statistic data/testnet-validators.csv -s head
 ```
 
 Step 13. Send rotation messages to the chain
 
-```
+```bash
 yarn send-rotation-messages data/testnet-rotation-messages.json
 ```
 
 Step 14. Get validators statistic again, make sure that withdrawal credentials started to change to 0x01
 
-```
+```bash
 yarn get-validators-statistic data/testnet-validators.csv -s head
 ```
