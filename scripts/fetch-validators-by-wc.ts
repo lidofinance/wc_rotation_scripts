@@ -119,8 +119,13 @@ program
     const { address: depositContractAddress } = await fetchDepositContract(consensusLayer);
     const depositContract = await getDepositContract(depositContractAddress, provider);
     const slotData = await fetchSlotData(consensusLayer, 'finalized');
+
+    if (slotData.message.body.execution_payload == null) {
+      throw new Error('The Merge has not come yet');
+    }
+
     const slotNumber = Number(slotData.message.slot);
-    const blockNumber = Number(slotData.message.body.execution_payload?.block_number);
+    const blockNumber = Number(slotData.message.body.execution_payload.block_number);
     console.log('Chain state fetched');
 
     console.table({

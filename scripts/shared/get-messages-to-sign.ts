@@ -10,11 +10,10 @@ const { arrayify } = utils;
 export const getMessagesToSign = (
   validatorIndexes: number[],
   publicKey: string,
-  forkVersion: string,
   genesis: Genesis,
   toExecutionAddress: string,
 ) => {
-  const forkVersionBytes = arrayify(forkVersion);
+  const forkVersionBytes = arrayify(genesis.genesis_fork_version);
   const genesisValidatorRoot = arrayify(genesis.genesis_validators_root);
   const domain = computeDomain(DOMAIN_BLS_TO_EXECUTION_CHANGE, forkVersionBytes, genesisValidatorRoot);
 

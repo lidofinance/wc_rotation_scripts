@@ -67,52 +67,44 @@ program
       .env('CONSENSUS_LAYER')
       .makeOptionMandatory(),
   )
-  .addOption(new Option('-f, --fork-version <string>', 'Capella fork version').makeOptionMandatory())
   .addOption(new Option('-p, --public-key <string>', 'BLS public key').makeOptionMandatory())
   .addOption(new Option('-t, --to-execution-address <string>', 'To Execution Layer address').makeOptionMandatory())
-  .action(
-    async (
-      indexesFile,
-      signaturesDir,
-      outputFilePath,
-      { forkVersion, consensusLayer, publicKey, toExecutionAddress },
-    ) => {
-      /**
-       * Read the validator indexes file content
-       * Indexes must be separated by `\n`
-       */
-      console.log('Reading validator indexes from file...');
-      const validatorIndexes = readValidatorsIndexesFile(indexesFile);
-      console.log('Validator indexes are read:', validatorIndexes.length);
-      console.log('-----');
+  .action(async (indexesFile, signaturesDir, outputFilePath, { consensusLayer, publicKey, toExecutionAddress }) => {
+    /**
+     * Read the validator indexes file content
+     * Indexes must be separated by `\n`
+     */
+    console.log('Reading validator indexes from file...');
+    const validatorIndexes = readValidatorsIndexesFile(indexesFile);
+    console.log('Validator indexes are read:', validatorIndexes.length);
+    console.log('-----');
 
-      /**
-       * Read reconstructed signatures from dir
-       */
-      console.log('Reading signatures from dir...');
-      const signaturesMap = readMessageSignatures(signaturesDir);
-      const reconstructedSignaturesLength = Object.keys(signaturesMap).length;
-      console.log('Signatures are read:', reconstructedSignaturesLength);
-      console.log('-----');
+    /**
+     * Read reconstructed signatures from dir
+     */
+    console.log('Reading signatures from dir...');
+    const signaturesMap = readMessageSignatures(signaturesDir);
+    const reconstructedSignaturesLength = Object.keys(signaturesMap).length;
+    console.log('Signatures are read:', reconstructedSignaturesLength);
+    console.log('-----');
 
-      /**
-       * Merge messages with signatures
-       */
-      console.log('Merging messages with signing roots...');
-      const genesis = await fetchGenesis(consensusLayer);
-      const messages = getMessagesToSign(validatorIndexes, publicKey, forkVersion, genesis, toExecutionAddress);
-      const signedMessages = mergeMessagesWithSignatures(messages, signaturesMap);
-      const signedMessagesLength = signedMessages.length;
+    /**
+     * Merge messages with signatures
+     */
+    console.log('Merging messages with signing roots...');
+    const genesis = await fetchGenesis(consensusLayer);
+    const messages = getMessagesToSign(validatorIndexes, publicKey, genesis, toExecutionAddress);
+    const signedMessages = mergeMessagesWithSignatures(messages, signaturesMap);
+    const signedMessagesLength = signedMessages.length;
 
-      if (signedMessagesLength !== reconstructedSignaturesLength) {
-        console.warn('The number of signatures does not match the number of messages', {
-          signedMessagesLength,
-          reconstructedSignaturesLength,
-        });
-      }
+    if (signedMessagesLength !== reconstructedSignaturesLength) {
+      console.warn('The number of signatures does not match the number of messages', {
+        signedMessagesLength,
+        reconstructedSignaturesLength,
+      });
+    }
 
-      saveMessagesToFile(signedMessages, outputFilePath);
-      console.log('The messages saved to:', outputFilePath);
-    },
-  )
+    saveMessagesToFile(signedMessages, outputFilePath);
+    console.log('The messages saved to:', outputFilePath);
+  })
   .parse(process.argv);

@@ -24,7 +24,7 @@ PASSWORD=$(<$CONFIG_DIR/keystore-password.txt)
   existing-mnemonic \
   --withdrawal_credentials=$1 \
   --chain=testnet20000089 \
-  --num_validators=5000 \
+  --num_validators=100 \
   --folder=$DIR \
   --keystore_password="$PASSWORD" \
   --validator_start_index=0 \

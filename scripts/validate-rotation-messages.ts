@@ -18,8 +18,8 @@ const program = new Command();
 
 const { arrayify } = utils;
 
-const verifyRotationMessages = (messages: SignedBLSToExecutionChange[], forkVersion: string, genesis: Genesis) => {
-  const forkVersionBytes = arrayify(forkVersion);
+const verifyRotationMessages = (messages: SignedBLSToExecutionChange[], genesis: Genesis) => {
+  const forkVersionBytes = arrayify(genesis.genesis_fork_version);
   const genesisValidatorRoot = arrayify(genesis.genesis_validators_root);
 
   return messages.map(({ message, signature }) => {
@@ -44,8 +44,7 @@ program
       .env('CONSENSUS_LAYER')
       .makeOptionMandatory(),
   )
-  .addOption(new Option('-f, --fork-version <string>', 'Capella fork version').makeOptionMandatory())
-  .action(async (inputFilePath, { consensusLayer, forkVersion }) => {
+  .action(async (inputFilePath, { consensusLayer }) => {
     /**
      * Read rotation messages
      */
@@ -59,7 +58,7 @@ program
      */
     console.log('Validating the rotation messages...');
     const genesis = await fetchGenesis(consensusLayer);
-    const result = verifyRotationMessages(messages, forkVersion, genesis);
+    const result = verifyRotationMessages(messages, genesis);
 
     const validSignatures = result.filter(({ result }) => result === true);
     const invalidSignatures = result.filter(({ result }) => result === false);

@@ -12,13 +12,12 @@ const { arrayify, hexlify } = utils;
 
 const signRotationMessages = (
   validatorIndexes: number[],
-  forkVersion: string,
   genesis: Genesis,
   blsSecretKey: SecretKey,
   toExecutionAddress: string,
 ) => {
   const publicKey = hexlify(blsSecretKey.toPublicKey().toBytes());
-  const messages = getMessagesToSign(validatorIndexes, publicKey, forkVersion, genesis, toExecutionAddress);
+  const messages = getMessagesToSign(validatorIndexes, publicKey, genesis, toExecutionAddress);
 
   return messages.map(({ message, signingRoot }) => {
     const signature = hexlify(blsSecretKey.sign(signingRoot).toBytes());
@@ -44,9 +43,8 @@ program
       .env('BLS_SECRET_KEY')
       .makeOptionMandatory(),
   )
-  .addOption(new Option('-f, --fork-version <string>', 'Capella fork version').makeOptionMandatory())
   .addOption(new Option('-t, --to-execution-address <string>', 'To Execution Layer address').makeOptionMandatory())
-  .action(async (inputFilePath, outputFilePath, { blsSecretKey, forkVersion, consensusLayer, toExecutionAddress }) => {
+  .action(async (inputFilePath, outputFilePath, { blsSecretKey, consensusLayer, toExecutionAddress }) => {
     const secretKey = SecretKey.fromBytes(arrayify(blsSecretKey));
 
     /**
@@ -63,7 +61,7 @@ program
      */
     console.log('Signing the rotation messages...');
     const genesis = await fetchGenesis(consensusLayer);
-    const signedMessages = signRotationMessages(validatorIndexes, forkVersion, genesis, secretKey, toExecutionAddress);
+    const signedMessages = signRotationMessages(validatorIndexes, genesis, secretKey, toExecutionAddress);
     saveSignedMessagesToFile(signedMessages, outputFilePath);
     console.log('Signing complete. The messages saved to:', outputFilePath);
   })

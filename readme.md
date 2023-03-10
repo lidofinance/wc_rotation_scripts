@@ -29,6 +29,7 @@ Some scripts may require some of the following environment variables to be set:
 - `EXECUTION_LAYER` – RPC URL of execution layer client
 - `CONSENSUS_LAYER` – API URL of consensus layer client
 - `KAFKA_CLIENT_ID` – A logical identifier of an application
+- `KAFKA_GROUP_ID` – A logical identifier of an application
 - `KAFKA_TOPIC` – Kafka topic
 - `KAFKA_USERNAME` – Kafka username
 - `KAFKA_PASSWORD` – Kafka password
@@ -39,14 +40,13 @@ Some scripts may require some of the following environment variables to be set:
 The script is used to merge the validator indexes from the `.csv` file with the signatures obtained from kafka.
 
 ```bash
-yarn expand-signing-roots data/validators.csv data/signatures data/output.json -f 0x03000000 -p 0xb67aca71f04b673037b54009b760f1961f3836e5714141c892afdb75ec0834dce6784d9c72ed8ad7db328cff8fe9f13e -t 0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f
+yarn expand-signing-roots data/validators.csv data/signatures data/output.json -p 0xb67aca71f04b673037b54009b760f1961f3836e5714141c892afdb75ec0834dce6784d9c72ed8ad7db328cff8fe9f13e -t 0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f
 ```
 
 Options:
 
 - `-p`, `--public-key`, required – public key of BSL withdrawal credentials
 - `-t`, `--to-execution-address`, required – address on execution layer to which the rotation is performed
-- `-f`, `--fork-version`, required – fork version, to which the message signatures are valid. [`0x03000000` for Capella](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/fork.md#configuration)
 
 Arguments:
 
@@ -77,6 +77,7 @@ Arguments:
 The script requires env variables to be set:
 
 - `KAFKA_CLIENT_ID`
+- `KAFKA_GROUP_ID`
 - `KAFKA_TOPIC`
 - `KAFKA_USERNAME`
 - `KAFKA_PASSWORD`
@@ -195,12 +196,8 @@ File format:
 The script validates signature of message to rotate withdrawal credentials from `0x00` to `0x01` type.
 
 ```bash
-yarn validate-rotation-messages -f 0x03000000 data/validators.json
+yarn validate-rotation-messages data/validators.json
 ```
-
-Options:
-
-- `-f`, `--fork-version`, required – fork version, to which the message signatures are valid. [`0x03000000` for Capella](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/fork.md#configuration)
 
 Arguments:
 
@@ -291,13 +288,12 @@ The script requires env variables to be set:
 The script generates and sign messages to rotate withdrawal credentials. Once executed, it will generate a file that needs to be sent to the network.
 
 ```bash
-yarn sign-rotation-messages -t 0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f -f 0x03000000 data/validators.csv data/rotation_messages.json
+yarn sign-rotation-messages -t 0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f data/validators.csv data/rotation_messages.json
 ```
 
 Options:
 
 - `-t`, `--to-execution-address`, required – address on execution layer to which the rotation is performed
-- `-f`, `--fork-version`, required – fork version, to which the message signatures are valid. [`0x03000000` for Capella](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/fork.md#configuration)
 
 Arguments:
 
