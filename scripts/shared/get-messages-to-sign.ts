@@ -19,7 +19,7 @@ export const getMessagesToSign = (
 
   return validatorIndexes.map((validatorIndex) => {
     const message = {
-      validator_index: validatorIndex,
+      validator_index: String(validatorIndex),
       from_bls_pubkey: publicKey,
       to_execution_address: toExecutionAddress,
     };

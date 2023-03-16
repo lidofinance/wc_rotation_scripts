@@ -43,6 +43,7 @@ const sendRotationMessages = async (messages: any[], consensusLayerURL: string, 
     const response = await fetch(url.toString(), {
       method: 'post',
       body: JSON.stringify([{ message, signature }]),
+      headers: { 'Content-Type': 'application/json' },
     });
 
     if (response.status !== 200) {
