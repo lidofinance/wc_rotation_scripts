@@ -1,5 +1,8 @@
 # Scripts for withdrawal credential rotation ceremony
 
+## Depretaced ⚠️
+The scripts were used as part of [dc4bc](https://github.com/lidofinance/dc4bc) and is no longer supported after [rotating withdrawal credentials from 0x00 type a to 0x01](https://twitter.com/LidoFinance/status/1646977448410480643)
+
 ## Install
 
 Step 1. Init submodules
